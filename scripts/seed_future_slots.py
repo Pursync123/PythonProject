@@ -17,7 +17,7 @@ def seed_future_slots():
             return
 
         start_date = date.today()
-        end_date = start_date + timedelta(days=2)
+        end_date = start_date + timedelta(days=5)
         
         print(f"Seeding slots from {start_date} to {end_date}...")
         
@@ -25,7 +25,7 @@ def seed_future_slots():
         for doc in doctors:
             current_date = start_date
             while current_date <= end_date:
-                # 9:00 AM to 5:00 PM (17:00) every 30 minutes
+                # 9:00 AM to 5:00 PM (17:00) every 15 minutes
                 start_time = time(9, 0)
                 end_time = time(17, 0)
                 curr_time = datetime.combine(date.today(), start_time)
@@ -46,14 +46,14 @@ def seed_future_slots():
                             doctor_id=doc.id,
                             date=current_date,
                             time=slot_time,
-                            duration_minutes=30,
+                            duration_minutes=15,
                             status=SlotStatus.AVAILABLE.value
                         )
                         db.add(slot)
                         slots_to_add.append(slot)
                         print(f"Added slot for {doc.name}: {current_date} {slot_time}", end='\r')
                     
-                    curr_time += timedelta(minutes=30)
+                    curr_time += timedelta(minutes=15)
                 
                 current_date += timedelta(days=1)
             print(f"Finished processing {doc.name}")

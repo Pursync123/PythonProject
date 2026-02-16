@@ -14,7 +14,7 @@ class Patient(BaseModel):
     first_name: str
     last_name: str
     dob: str
-    insurance_provider: str
+    phone: str
 
 class AvailableSlot(BaseModel):
     date: str
@@ -45,7 +45,7 @@ class AppointmentRequest(BaseModel):
     first_name: str
     last_name: str
     dob: str
-    insurance_provider: str
+    phone: str
     reason: str
     requested_datetime: str
 

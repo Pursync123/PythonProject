@@ -8,7 +8,7 @@ class AvailableSlotRepository(BaseRepository):
     """Repository for Available Slot operations"""
 
     def create(self, doctor_id: str, date_val: date, time_val,
-               duration_minutes: int = 30, **kwargs) -> AvailableSlot:
+               duration_minutes: int = 15, **kwargs) -> AvailableSlot:
         """Create a new available slot"""
         slot = AvailableSlot(
             id=uuid.uuid4(),

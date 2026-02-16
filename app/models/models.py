@@ -91,7 +91,7 @@ class AvailableSlot(Base):
     doctor_id = Column(String(20), ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
     date = Column(Date, nullable=False, index=True)
     time = Column(Time, nullable=False)
-    duration_minutes = Column(Integer, default=30, nullable=False)
+    duration_minutes = Column(Integer, default=15, nullable=False)
     status = Column(String(20), default=SlotStatus.AVAILABLE.value, nullable=False, index=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
