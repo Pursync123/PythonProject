@@ -21,7 +21,9 @@ def book_appointment(
     result = service.book_appointment(payload, doctor_id=effective_doctor_id)
     return {"status": "booked", "appointment": result}
 
-@router.get("/appointments")
+from app.schemas.schemas import AppointmentRequest, AppointmentListResponse
+
+@router.get("/appointments", response_model=AppointmentListResponse)
 def get_all_appointments(db: Session = Depends(get_db)):
     service = AppointmentService(db)
     appts = service.get_all_appointments()

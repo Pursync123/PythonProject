@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import List, Optional, Any
 from datetime import date, datetime, time
 import uuid
@@ -10,17 +10,53 @@ class AuditLog(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     details: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 class Patient(BaseModel):
     first_name: str
     last_name: str
-    dob: str
-    phone: str
+    dob: str | date
+    phone: Optional[str] = None
+
+
+
+    model_config = ConfigDict(from_attributes=True)
 
 class AvailableSlot(BaseModel):
-    date: str
-    time: str
+    id: Optional[str | uuid.UUID] = None # Added ID for updates
+
+    date: date | str
+    time: time | str
     duration_minutes: int
     status: str
+
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
+class SlotCreate(BaseModel):
+    doctor_id: str
+    date: str
+    time: str
+    duration_minutes: int = 15
+
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, v):
+        for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+            try:
+                datetime.strptime(v, fmt)
+                # Ensure we return YYYY-MM-DD for consistency
+                return datetime.strptime(v, fmt).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+        raise ValueError("date must be in YYYY-MM-DD or DD-MM-YYYY format")
+
+class SlotUpdate(BaseModel):
+    status: str # "available", "booked", "cancelled", "disabled"
+
+    model_config = ConfigDict(from_attributes=True)
 
 class Doctor(BaseModel):
     id: str
@@ -28,17 +64,43 @@ class Doctor(BaseModel):
     department: str
     specialization: str
     experience: int
-    available_slots: List[AvailableSlot]
+    available_slots: List[AvailableSlot] = Field(default_factory=list)
     available_slots_count: int
 
+    model_config = ConfigDict(from_attributes=True)
+
+class DoctorListResponse(BaseModel):
+    status: str
+    count: int
+    doctors: List[Doctor]
+
+class DoctorResponse(BaseModel):
+    status: str
+    doctor: Doctor
+
+
+
+
 class Appointment(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: str | uuid.UUID = Field(default_factory=lambda: str(uuid.uuid4()))
+
     patient: Patient
     doctor_id: Optional[str] = None # Linking to a doctor if needed, though currently logic binds by time
     reason: str
-    requested_datetime: str
-    created_at: str = Field(default_factory=lambda: datetime.now().isoformat() + "Z")
+    requested_datetime: datetime | str
+    created_at: datetime | str = Field(default_factory=lambda: datetime.now().isoformat() + "Z")
+
     status: str = "booked" # booked, cancelled
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
+class AppointmentListResponse(BaseModel):
+    status: str
+    appointments: List[Appointment]
+    count: int
+
 
 class AppointmentRequest(BaseModel):
     doctor_id: Optional[str] = None
