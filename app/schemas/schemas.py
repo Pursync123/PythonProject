@@ -35,6 +35,16 @@ class AvailableSlot(BaseModel):
 
 
 
+def _normalize_date(v: str) -> str:
+    """Normalize date string to YYYY-MM-DD from multiple input formats."""
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(v, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    raise ValueError("Date must be in YYYY-MM-DD or DD-MM-YYYY format")
+
+
 class SlotCreate(BaseModel):
     doctor_id: str
     date: str
@@ -44,14 +54,53 @@ class SlotCreate(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date(cls, v):
-        for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
-            try:
-                datetime.strptime(v, fmt)
-                # Ensure we return YYYY-MM-DD for consistency
-                return datetime.strptime(v, fmt).strftime("%Y-%m-%d")
-            except ValueError:
-                continue
-        raise ValueError("date must be in YYYY-MM-DD or DD-MM-YYYY format")
+        return _normalize_date(v)
+
+
+
+class BulkSlotCreate(BaseModel):
+    """Schema for generating 15-min slots across a date/time range."""
+    doctor_id: str
+    start_date: str        # YYYY-MM-DD
+    end_date: str          # YYYY-MM-DD
+    start_time: str        # HH:MM  e.g. "09:00"
+    end_time: str          # HH:MM  e.g. "13:00"
+    duration_minutes: int = 15
+
+    @field_validator("start_date", "end_date")
+    @classmethod
+    def validate_dates(cls, v):
+        return _normalize_date(v)
+
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def validate_times(cls, v):
+        try:
+            datetime.strptime(v, "%H:%M")
+            return v
+        except ValueError:
+            raise ValueError("Time must be in HH:MM format")
+
+
+class BulkSlotCancel(BaseModel):
+    """Schema for cancelling/disabling slots by date and time period."""
+    doctor_id: str
+    date: str                         # YYYY-MM-DD
+    period: str = "all"               # "all" | "morning" | "evening"
+
+    @field_validator("date")
+    @classmethod
+    def validate_date(cls, v):
+        return _normalize_date(v)
+
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, v):
+        allowed = {"all", "morning", "evening"}
+        if v.lower() not in allowed:
+            raise ValueError(f"period must be one of {allowed}")
+        return v.lower()
+
 
 class SlotUpdate(BaseModel):
     status: str # "available", "booked", "cancelled", "disabled"

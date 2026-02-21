@@ -131,6 +131,73 @@ class DoctorService:
             from fastapi import HTTPException
             raise HTTPException(status_code=500, detail="Internal Server Error during slot creation.")
 
+    def create_bulk_slots(self, data) -> dict:
+        """Generate 15-min slots across a date/time range.
+        
+        Returns dict with created count and skipped count.
+        """
+        from datetime import datetime, timedelta, date as date_cls, time as time_cls
+
+        start_date = datetime.strptime(data.start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(data.end_date, "%Y-%m-%d").date()
+        start_time = datetime.strptime(data.start_time, "%H:%M").time()
+        end_time = datetime.strptime(data.end_time, "%H:%M").time()
+        duration = data.duration_minutes
+
+        if end_date < start_date:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="end_date must be >= start_date")
+        if end_time <= start_time:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="end_time must be > start_time")
+
+        # Build the list of slot dicts
+        slots_to_create = []
+        current_date = start_date
+        while current_date <= end_date:
+            # Walk the time window in `duration`-minute steps
+            slot_dt = datetime.combine(current_date, start_time)
+            end_dt = datetime.combine(current_date, end_time)
+            while slot_dt + timedelta(minutes=duration) <= end_dt:
+                slots_to_create.append({
+                    "doctor_id": data.doctor_id,
+                    "date": current_date,
+                    "time": slot_dt.time(),
+                    "duration_minutes": duration,
+                })
+                slot_dt += timedelta(minutes=duration)
+            current_date += timedelta(days=1)
+
+        total = len(slots_to_create)
+        created = self.slot_repo.bulk_create(slots_to_create)
+        return {"created": created, "skipped": total - created, "total_requested": total}
+
+    def cancel_slots(self, data) -> dict:
+        """Cancel/disable slots for a doctor on a date, filtered by period."""
+        from datetime import datetime, time as time_cls
+
+        target_date = datetime.strptime(data.date, "%Y-%m-%d").date()
+        period = data.period
+
+        # Map period to time boundaries
+        if period == "morning":
+            start_time = time_cls(0, 0)
+            end_time = time_cls(12, 0)
+        elif period == "evening":
+            start_time = time_cls(12, 0)
+            end_time = time_cls(23, 59)
+        else:  # "all"
+            start_time = None
+            end_time = None
+
+        count = self.slot_repo.cancel_slots_in_range(
+            doctor_id=data.doctor_id,
+            target_date=target_date,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        return {"cancelled": count, "date": data.date, "period": period}
+
     def update_slot_status(self, slot_id: str, status: str):
         """Update slot status"""
         return self.slot_repo.update_status(uuid.UUID(slot_id), status)

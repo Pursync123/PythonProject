@@ -15,6 +15,8 @@ class SlotStatus(str, enum.Enum):
     """Enum for appointment slot status"""
     AVAILABLE = "available"
     BOOKED = "booked"
+    DISABLED = "disabled"
+    CANCELLED = "cancelled"
 
 
 class AppointmentStatus(str, enum.Enum):

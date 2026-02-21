@@ -50,3 +50,56 @@ class AvailableSlotRepository(BaseRepository):
             Doctor.department == department,
             AvailableSlot.status == SlotStatus.AVAILABLE.value
         ).order_by(AvailableSlot.date, AvailableSlot.time).all()
+
+    def bulk_create(self, slots_data: List[dict]) -> int:
+        """Bulk-insert slots in a single transaction. Skips duplicates gracefully.
+        
+        Args:
+            slots_data: list of dicts with keys doctor_id, date, time, duration_minutes
+        Returns:
+            Number of slots actually created (duplicates skipped).
+        """
+        from sqlalchemy.exc import IntegrityError
+        created = 0
+        for s in slots_data:
+            slot = AvailableSlot(
+                id=uuid.uuid4(),
+                doctor_id=s["doctor_id"],
+                date=s["date"],
+                time=s["time"],
+                duration_minutes=s["duration_minutes"],
+                status=SlotStatus.AVAILABLE.value,
+            )
+            self.db.add(slot)
+            try:
+                self.db.flush()      # detect constraint violations early
+                created += 1
+            except IntegrityError:
+                self.db.rollback()   # skip duplicate, keep going
+        self.db.commit()
+        return created
+
+    def cancel_slots_in_range(self, doctor_id: str, target_date: date,
+                              start_time=None, end_time=None) -> int:
+        """Disable all available slots for a doctor on a date, optionally within a time window.
+        
+        Returns:
+            Number of slots cancelled.
+        """
+        from datetime import time as dt_time
+        query = self.db.query(AvailableSlot).filter(
+            AvailableSlot.doctor_id == doctor_id,
+            AvailableSlot.date == target_date,
+            AvailableSlot.status == SlotStatus.AVAILABLE.value,
+        )
+        if start_time is not None:
+            query = query.filter(AvailableSlot.time >= start_time)
+        if end_time is not None:
+            query = query.filter(AvailableSlot.time < end_time)
+
+        slots = query.all()
+        for slot in slots:
+            slot.status = SlotStatus.DISABLED.value if hasattr(SlotStatus, 'DISABLED') else "disabled"
+            slot.updated_at = datetime.utcnow()
+        self.db.commit()
+        return len(slots)

@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import get_db
 from app.services.doctor_service import DoctorService
-from app.schemas.schemas import Doctor as DoctorSchema, SlotCreate, SlotUpdate, DoctorListResponse, DoctorResponse
+from app.schemas.schemas import (
+    Doctor as DoctorSchema, SlotCreate, SlotUpdate,
+    BulkSlotCreate, BulkSlotCancel,
+    DoctorListResponse, DoctorResponse,
+)
 
 router = APIRouter()
 
@@ -75,6 +79,36 @@ def create_slot(
     service = DoctorService(db)
     new_slot = service.create_slot(slot_data)
     return {"status": "success", "slot": new_slot}
+
+@router.post("/doctors/{doctor_id}/slots/bulk")
+def create_bulk_slots(
+    doctor_id: str,
+    data: BulkSlotCreate,
+    db: Session = Depends(get_db)
+):
+    """Generate multiple 15-min slots across a date/time range for a doctor."""
+    if data.doctor_id != doctor_id:
+        raise HTTPException(status_code=400, detail="Doctor ID in path and body must match")
+
+    service = DoctorService(db)
+    result = service.create_bulk_slots(data)
+    return {"status": "success", **result}
+
+
+@router.post("/doctors/{doctor_id}/slots/cancel")
+def cancel_slots(
+    doctor_id: str,
+    data: BulkSlotCancel,
+    db: Session = Depends(get_db)
+):
+    """Cancel/disable slots for a doctor on a given date and period (all/morning/evening)."""
+    if data.doctor_id != doctor_id:
+        raise HTTPException(status_code=400, detail="Doctor ID in path and body must match")
+
+    service = DoctorService(db)
+    result = service.cancel_slots(data)
+    return {"status": "success", **result}
+
 
 @router.patch("/slots/{slot_id}")
 def update_slot_status(
