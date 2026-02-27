@@ -52,7 +52,7 @@ class AppointmentService:
             first_name=payload.first_name,
             last_name=payload.last_name,
             dob=payload.dob,
-            insurance_provider=payload.insurance_provider
+            phone=payload.phone
         )
 
         # 4. Book Slot & Create Appointment

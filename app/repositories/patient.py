@@ -10,7 +10,7 @@ class PatientRepository(BaseRepository):
     """Repository for Patient operations"""
 
     def create(self, first_name: str, last_name: str, dob: str,
-               insurance_provider: str, **kwargs) -> Patient:
+               phone: str = None, insurance_provider: str = None, **kwargs) -> Patient:
         """Create a new patient"""
         from datetime import datetime as dt
         dob_date = dt.fromisoformat(dob).date() if isinstance(dob, str) else dob
@@ -20,6 +20,7 @@ class PatientRepository(BaseRepository):
             first_name=first_name,
             last_name=last_name,
             dob=dob_date,
+            phone=phone,
             insurance_provider=insurance_provider,
             **kwargs
         )
