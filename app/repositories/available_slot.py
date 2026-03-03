@@ -105,7 +105,7 @@ class AvailableSlotRepository(BaseRepository):
 
         slots = query.all()
         for slot in slots:
-            slot.status = SlotStatus.DISABLED.value if hasattr(SlotStatus, 'DISABLED') else "disabled"
+            slot.status = SlotStatus.CANCELLED.value
             slot.updated_at = datetime.utcnow()
         self.db.commit()
         return len(slots)

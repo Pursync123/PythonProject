@@ -21,6 +21,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.PROJECT_NAME, version="1.1.0", lifespan=lifespan)
 
+from fastapi.middleware.cors import CORSMiddleware
+
+# Set all CORS enabled origins before routers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods
+    allow_headers=["*"], # Allows all headers
+)
+
 add_exception_handlers(app)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -29,13 +40,4 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 def root():
     return {"message": "Welcome to AI Receptionist API. Visit /docs for documentation."}
 
-from fastapi.middleware.cors import CORSMiddleware
 
-# Set all CORS enabled origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods
-    allow_headers=["*"], # Allows all headers
-)
