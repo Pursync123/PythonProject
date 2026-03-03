@@ -186,3 +186,44 @@ class Department(Base):
     def __repr__(self):
         return f"<Department {self.id} - {self.name}>"
 
+
+class ArchivedAvailableSlot(Base):
+    """Archived appointment slots model"""
+    __tablename__ = "archived_available_slots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    doctor_id = Column(String(20), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+    time = Column(Time, nullable=False)
+    duration_minutes = Column(Integer, nullable=False)
+    status = Column(String(20), nullable=False, index=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    archived_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    def __repr__(self):
+        return f"<ArchivedAvailableSlot {self.id} - {self.doctor_id} @ {self.date} {self.time}>"
+
+
+class ArchivedAppointment(Base):
+    """Archived appointment booking model"""
+    __tablename__ = "archived_appointments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    patient_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    doctor_id = Column(String(20), nullable=False, index=True)
+    slot_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    reason = Column(Text, nullable=False)
+    notes = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, index=True)
+    requested_datetime = Column(DateTime, nullable=False, index=True)
+    cancelled_at = Column(DateTime, nullable=True)
+    cancellation_reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    archived_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    def __repr__(self):
+        return f"<ArchivedAppointment {self.id} - Patient {self.patient_id}>"
+

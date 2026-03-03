@@ -29,8 +29,10 @@ class DoctorService:
 
     def _format_doctor(self, doc, include_slots: bool, slot_limit: int, manage_mode: bool = False) -> dict:
         """Helper to format doctor data"""
-        from datetime import date
-        today = date.today()
+        from datetime import datetime
+        now = datetime.now()
+        today = now.date()
+        current_time = now.time()
         
         doc_data = {
             "id": doc.id,
@@ -45,13 +47,13 @@ class DoctorService:
             # In manage mode, return all future slots regardless of status
             avail_slots = [
                 s for s in doc.slots 
-                if s.date >= today
+                if s.date > today or (s.date == today and s.time >= current_time)
             ]
         else:
             # In normal mode, only return available future slots
             avail_slots = [
                 s for s in doc.slots 
-                if s.status == "available" and s.date >= today
+                if s.status == "available" and (s.date > today or (s.date == today and s.time >= current_time))
             ]
         avail_slots.sort(key=lambda x: (x.date, x.time))
         
@@ -64,8 +66,10 @@ class DoctorService:
 
     def get_available_slots(self, department: Optional[str] = None, slot_limit: int = 10):
         """Get available slots logic with limiting"""
-        from datetime import date
-        today = date.today()
+        from datetime import datetime
+        now = datetime.now()
+        today = now.date()
+        current_time = now.time()
         
         if department:
             doctors = self.doctor_repo.get_by_department(department)
@@ -77,7 +81,7 @@ class DoctorService:
             # Filter (available + today/future) and sort by date and time
             avail_slots = [
                 s for s in doc.slots 
-                if s.status == "available" and s.date >= today
+                if s.status == "available" and (s.date > today or (s.date == today and s.time >= current_time))
             ]
             avail_slots.sort(key=lambda x: (x.date, x.time))
             

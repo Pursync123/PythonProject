@@ -52,16 +52,25 @@ class AvailableSlotRepository(BaseRepository):
         ).order_by(AvailableSlot.date, AvailableSlot.time).all()
 
     def bulk_create(self, slots_data: List[dict]) -> int:
-        """Bulk-insert slots in a single transaction. Skips duplicates gracefully.
-        
-        Args:
-            slots_data: list of dicts with keys doctor_id, date, time, duration_minutes
-        Returns:
-            Number of slots actually created (duplicates skipped).
-        """
-        from sqlalchemy.exc import IntegrityError
+        """Bulk-insert slots, skipping duplicates by pre-checking existing slots."""
+        if not slots_data:
+            return 0
+
+        # Collect all dates in this batch to query existing slots once
+        dates = list({s["date"] for s in slots_data})
+        doctor_id = slots_data[0]["doctor_id"]
+
+        existing = self.db.query(AvailableSlot.date, AvailableSlot.time).filter(
+            AvailableSlot.doctor_id == doctor_id,
+            AvailableSlot.date.in_(dates),
+        ).all()
+        existing_set = {(row.date, row.time) for row in existing}
+
         created = 0
         for s in slots_data:
+            key = (s["date"], s["time"])
+            if key in existing_set:
+                continue  # skip duplicate
             slot = AvailableSlot(
                 id=uuid.uuid4(),
                 doctor_id=s["doctor_id"],
@@ -71,11 +80,8 @@ class AvailableSlotRepository(BaseRepository):
                 status=SlotStatus.AVAILABLE.value,
             )
             self.db.add(slot)
-            try:
-                self.db.flush()      # detect constraint violations early
-                created += 1
-            except IntegrityError:
-                self.db.rollback()   # skip duplicate, keep going
+            existing_set.add(key)  # prevent duplicates within same batch
+            created += 1
         self.db.commit()
         return created
 

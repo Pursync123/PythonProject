@@ -338,6 +338,21 @@ python main.py
 alembic upgrade head
 ```
 
+### Background Jobs (Archiving)
+
+To keep the active database small and fast, the project includes a script to move old appointments and available slots into archive tables.
+You can run it manually:
+```bash
+python scripts/archive_old_records.py --days 15
+```
+
+**Recommended Setup:** Configure a Cron Job to run this automatically every night on your server:
+```bash
+# Open crontab: crontab -e
+# Run daily at 2:00 AM
+0 2 * * * cd /path/to/PythonProject && .venv/bin/python scripts/archive_old_records.py >> /var/log/appointment_archive.log 2>&1
+```
+
 ---
 
 ## 11. Example API Calls
