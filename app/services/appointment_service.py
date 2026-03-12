@@ -19,8 +19,19 @@ class AppointmentService:
     def book_appointment(self, payload: AppointmentRequest, doctor_id: Optional[str] = None) -> dict:
         """Book an appointment logic"""
         # 1. Check if requested time is in the future
-        req_dt = datetime.fromisoformat(payload.requested_datetime)
-        if req_dt < datetime.now():
+        import pytz
+        req_dt = datetime.fromisoformat(payload.requested_datetime.replace("Z", "+00:00"))
+        
+        # If the datetime is timezone-aware (like from Retell), convert to local time (IST)
+        local_tz = pytz.timezone("Asia/Kolkata")
+        if req_dt.tzinfo is not None:
+            req_dt = req_dt.astimezone(local_tz)
+        else:
+            # If naive, assume it's already in local time
+            req_dt = local_tz.localize(req_dt)
+            
+        now_local = datetime.now(local_tz)
+        if req_dt < now_local:
             raise AppError(
                 f"I'm sorry, I can't book an appointment for a past date or time ({payload.requested_datetime}). Could you please suggest a future time?", 
                 status_code=400
@@ -58,12 +69,15 @@ class AppointmentService:
         # 4. Book Slot & Create Appointment
         self.slot_repo.update_status(selected_slot.id, "booked")
         
+        # Convert local aware datetime to naive string for DB storage
+        naive_local_dt = req_dt.replace(tzinfo=None)
+        
         appointment = self.appointment_repo.create(
             patient_id=patient.id,
             doctor_id=selected_slot.doctor_id,
             slot_id=selected_slot.id,
             reason=payload.reason,
-            requested_datetime=payload.requested_datetime,
+            requested_datetime=naive_local_dt,
             status="booked"
         )
         
