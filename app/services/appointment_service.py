@@ -20,26 +20,31 @@ class AppointmentService:
         """Book an appointment logic"""
         # 1. Check if requested time is in the future
         import pytz
-        req_dt = datetime.fromisoformat(payload.requested_datetime.replace("Z", "+00:00"))
         
-        # If the datetime is timezone-aware (like from Retell), convert to local time (IST)
+        # Parse the requested datetime
+        # Retell sends strings like '2026-03-14T11:00:00Z'. The intent is for it to act as local IST time.
+        raw_dt_str = payload.requested_datetime.replace("Z", "")
+        req_dt_naive = datetime.fromisoformat(raw_dt_str)
+        
+        # We need a local aware datetime to compare against "now"
         local_tz = pytz.timezone("Asia/Kolkata")
-        if req_dt.tzinfo is not None:
-            req_dt = req_dt.astimezone(local_tz)
-        else:
-            # If naive, assume it's already in local time
-            req_dt = local_tz.localize(req_dt)
+        req_dt_ist_aware = local_tz.localize(req_dt_naive)
             
-        now_local = datetime.now(local_tz)
-        if req_dt < now_local:
+        # Create a naive datetime object representing the IST time for DB slot match
+        req_dt_ist_naive = req_dt_naive
+            
+        now_local = datetime.now(local_tz).replace(tzinfo=None) # Compare naive with naive
+        if req_dt_ist_naive < now_local:
             raise AppError(
                 f"I'm sorry, I can't book an appointment for a past date or time ({payload.requested_datetime}). Could you please suggest a future time?", 
                 status_code=400
             )
 
         # 2. Find Slot
-        req_date = req_dt.date()
-        req_time = req_dt.time()
+        req_date = req_dt_ist_naive.date()
+        req_time = req_dt_ist_naive.time()
+        
+        print(f"SEARCHING SLOT: doctor_id={doctor_id}, date={req_date}, time={req_time}")
         
         selected_slot = None
         if doctor_id:
@@ -55,6 +60,8 @@ class AppointmentService:
                 if selected_slot:
                     break
         
+        print(f"FOUND SLOT: {selected_slot}")
+        
         if not selected_slot:
             raise SlotUnavailableException()
 
@@ -67,10 +74,11 @@ class AppointmentService:
         )
 
         # 4. Book Slot & Create Appointment
+        print("UPDATING SLOT ID TO BOOKED:", selected_slot.id)
         self.slot_repo.update_status(selected_slot.id, "booked")
         
         # Convert local aware datetime to naive string for DB storage
-        naive_local_dt = req_dt.replace(tzinfo=None)
+        naive_local_dt = req_dt_naive
         
         appointment = self.appointment_repo.create(
             patient_id=patient.id,

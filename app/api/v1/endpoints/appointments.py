@@ -15,11 +15,16 @@ def book_appointment(
     db: Session = Depends(get_db)
 ):
     """Book an appointment."""
-    service = AppointmentService(db)
-    # Prefer doctor_id from body, fallback to query param
-    effective_doctor_id = payload.doctor_id or doctor_id
-    result = service.book_appointment(payload, doctor_id=effective_doctor_id)
-    return {"status": "booked", "appointment": result}
+    import traceback
+    try:
+        service = AppointmentService(db)
+        # Prefer doctor_id from body, fallback to query param
+        effective_doctor_id = payload.doctor_id or doctor_id
+        result = service.book_appointment(payload, doctor_id=effective_doctor_id)
+        return {"status": "booked", "appointment": result}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 from app.schemas.schemas import AppointmentRequest, AppointmentListResponse
 

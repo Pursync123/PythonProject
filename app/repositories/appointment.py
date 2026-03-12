@@ -26,8 +26,17 @@ class AppointmentRepository(BaseRepository):
             **kwargs
         )
         self.db.add(appointment)
+        
+        if slot_id:
+            slot_check = self.db.query(AvailableSlot).filter(AvailableSlot.id == slot_id).first()
+            print("PRE-COMMIT SLOT STATUS:", slot_check.status if slot_check else "NOT FOUND")
+            
         self.db.commit()
         self.db.refresh(appointment)
+        
+        if slot_id:
+            slot_check_after = self.db.query(AvailableSlot).filter(AvailableSlot.id == slot_id).first()
+            print("POST-COMMIT SLOT STATUS:", slot_check_after.status if slot_check_after else "NOT FOUND")
         logger.info(f"Appointment created: {appointment.id}")
         return appointment
 
