@@ -52,7 +52,7 @@ def get_doctor(
 @router.get("/available-slots")
 def get_available_slots(
     department: Optional[str] = None,
-    slot_limit: int = 10,
+    slot_limit: int = 500,
     db: Session = Depends(get_db)
 ):
     """Get available slots by department."""

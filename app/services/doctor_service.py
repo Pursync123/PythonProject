@@ -64,7 +64,7 @@ class DoctorService:
         
         return doc_data
 
-    def get_available_slots(self, department: Optional[str] = None, slot_limit: int = 10):
+    def get_available_slots(self, department: Optional[str] = None, slot_limit: int = 500):
         """Get available slots logic with limiting"""
         from datetime import datetime
         now = datetime.now()
