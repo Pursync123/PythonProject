@@ -36,11 +36,9 @@ class AppointmentRepository(BaseRepository):
         return self.db.query(Appointment).filter(Appointment.id == appointment_id).first()
 
     def get_booked_appointments(self) -> List[Appointment]:
-        """Get all booked appointments from today onwards"""
-        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        """Get all booked appointments"""
         return self.db.query(Appointment).filter(
-            Appointment.status == AppointmentStatus.BOOKED.value,
-            Appointment.requested_datetime >= today
+            Appointment.status == AppointmentStatus.BOOKED.value
         ).order_by(Appointment.requested_datetime).all()
 
     def cancel(self, appointment_id: uuid.UUID) -> Optional[Appointment]:
