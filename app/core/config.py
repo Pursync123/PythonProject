@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = "postgresql://ranga:lQHuZjjAtYduMoYuAL6FSHTsBd75u3Qd@dpg-d58jgkogjchc73a744k0-a.virginia-postgres.render.com/ai_receptionist_3gp5?sslmode=require"
+    # DATABASE_URL: str = "postgresql://ranga:lQHuZjjAtYduMoYuAL6FSHTsBd75u3Qd@dpg-d58jgkogjchc73a744k0-a.virginia-postgres.render.com/ai_receptionist_3gp5?sslmode=require"
+    DATABASE_URL: str = "postgresql://ranga:04ZD9k3P7DJhl0IWjVofErqi2cuSMFbU@dpg-d6pgod15pdvs73a7r6t0-a.oregon-postgres.render.com/ai_receptionist_ndru?sslmode=require"
     
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
