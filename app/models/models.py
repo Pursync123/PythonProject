@@ -166,7 +166,7 @@ class AuditLog(Base):
     # Composite index for audit queries
     __table_args__ = (
         Index('idx_action_timestamp', 'action', 'created_at'),
-        Index('idx_appointment_audit', 'appointment_id', 'created_at'),
+        Index('idx_auditlog_appointment', 'appointment_id', 'created_at'),
     )
 
     def __repr__(self):
