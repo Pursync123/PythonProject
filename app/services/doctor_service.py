@@ -20,7 +20,7 @@ class DoctorService:
             result.append(doc_data)
         return result
 
-    def get_doctor_by_id(self, doctor_id: str, include_slots: bool = True, slot_limit: int = 20, manage_mode: bool = False) -> Optional[dict]:
+    def get_doctor_by_id(self, doctor_id: str, include_slots: bool = True, slot_limit: int = 500, manage_mode: bool = False) -> Optional[dict]:
         """Get a single doctor by ID with slots"""
         doc = self.doctor_repo.get_by_id(doctor_id)
         if not doc:

@@ -35,7 +35,7 @@ def get_doctors(
 def get_doctor(
     doctor_id: str,
     include_slots: bool = True,
-    slot_limit: int = 20,
+    slot_limit: int = 500,
     manage_mode: bool = False,
     db: Session = Depends(get_db)
 ):
