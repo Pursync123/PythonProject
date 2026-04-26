@@ -11,28 +11,8 @@ from app.schemas.schemas import (
 
 router = APIRouter()
 
-@router.get("/doctors", response_model=DoctorListResponse)
+@router.get("/doctors", response_model=DoctorResponse)
 def get_doctors(
-    include_slots: bool = False,
-    slot_limit: int = 5,
-    specialization: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Get all doctors with optional slot inclusion and specialization filtering."""
-    service = DoctorService(db)
-    doctors_data = service.get_all_active_doctors(
-        include_slots=include_slots, 
-        slot_limit=slot_limit,
-        specialization=specialization
-    )
-    return {
-        "status": "success",
-        "count": len(doctors_data),
-        "doctors": doctors_data
-    }
-
-@router.get("/doctors/{doctor_id}", response_model=DoctorResponse)
-def get_doctor(
     doctor_id: str,
     include_slots: bool = True,
     slot_limit: int = 500,
@@ -48,6 +28,8 @@ def get_doctor(
         "status": "success",
         "doctor": doctor
     }
+
+
 
 @router.get("/available-slots")
 def get_available_slots(
