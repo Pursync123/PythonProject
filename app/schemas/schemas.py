@@ -164,10 +164,9 @@ class AppointmentRequest(BaseModel):
     @classmethod
     def validate_dob(cls, v):
         try:
-            datetime.strptime(v, "%Y-%m-%d")
-            return v
+            return _normalize_date(v)
         except ValueError:
-            raise ValueError("dob must be in ISO format YYYY-MM-DD")
+            raise ValueError("dob must be in ISO format YYYY-MM-DD or DD/MM/YYYY")
 
     @field_validator("requested_datetime")
     @classmethod
