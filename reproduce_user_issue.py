@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # URL_BASE = "http://localhost:8000/api/v1"
-URL_BASE = "https://pythonproject-adj3.onrender.com/api/v1"
+URL_BASE = "https://pythonproject-1-e1we.onrender.com/api/v1"
 
 def test_full_flow():
     logger.info(f"--- Diagnosing Remote Environment {URL_BASE} ---")
