@@ -42,19 +42,27 @@ class DoctorService:
             "experience": doc.experience,
         }
         
-        # Filter (available + today/future) and sort by date and time
+        # Deduplicate slots by date and time to handle potential database duplicates
+        unique_slots = {}
+        for s in doc.slots:
+            if s.date < today or (s.date == today and s.time < current_time):
+                continue
+            
+            key = (s.date, s.time)
+            if key not in unique_slots:
+                unique_slots[key] = s
+            else:
+                # Prioritize 'booked' or other statuses over 'available' to prevent double-booking
+                if unique_slots[key].status == "available" and s.status != "available":
+                    unique_slots[key] = s
+
         if manage_mode:
             # In manage mode, return all future slots regardless of status
-            avail_slots = [
-                s for s in doc.slots 
-                if s.date > today or (s.date == today and s.time >= current_time)
-            ]
+            avail_slots = list(unique_slots.values())
         else:
             # In normal mode, only return available future slots
-            avail_slots = [
-                s for s in doc.slots 
-                if s.status == "available" and (s.date > today or (s.date == today and s.time >= current_time))
-            ]
+            avail_slots = [s for s in unique_slots.values() if s.status == "available"]
+            
         avail_slots.sort(key=lambda x: (x.date, x.time))
         
         doc_data["available_slots_count"] = len(avail_slots)
@@ -78,11 +86,19 @@ class DoctorService:
         
         result_doctors = []
         for doc in doctors:
-            # Filter (available + today/future) and sort by date and time
-            avail_slots = [
-                s for s in doc.slots 
-                if s.status == "available" and (s.date > today or (s.date == today and s.time >= current_time))
-            ]
+            # Deduplicate slots by date and time to handle potential database duplicates
+            unique_slots = {}
+            for s in doc.slots:
+                if s.date < today or (s.date == today and s.time < current_time):
+                    continue
+                key = (s.date, s.time)
+                if key not in unique_slots:
+                    unique_slots[key] = s
+                else:
+                    if unique_slots[key].status == "available" and s.status != "available":
+                        unique_slots[key] = s
+            
+            avail_slots = [s for s in unique_slots.values() if s.status == "available"]
             avail_slots.sort(key=lambda x: (x.date, x.time))
             
             if avail_slots:
