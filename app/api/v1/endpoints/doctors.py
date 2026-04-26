@@ -11,22 +11,41 @@ from app.schemas.schemas import (
 
 router = APIRouter()
 
-@router.get("/doctors", response_model=DoctorResponse)
+@router.get("/doctors")
 def get_doctors(
-    doctor_id: str,
-    include_slots: bool = True,
-    slot_limit: int = 500,
+    doctor_id: Optional[str] = None,
+    include_slots: Optional[bool] = None,
+    slot_limit: Optional[int] = None,
     manage_mode: bool = False,
+    specialization: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """Get specific doctor details and available slots."""
+    """Get all active doctors, or a specific doctor when doctor_id query param is provided."""
     service = DoctorService(db)
-    doctor = service.get_doctor_by_id(doctor_id, include_slots=include_slots, slot_limit=slot_limit, manage_mode=manage_mode)
-    if not doctor:
-        raise HTTPException(status_code=404, detail="Doctor not found")
+
+    if doctor_id:
+        doctor = service.get_doctor_by_id(
+            doctor_id, 
+            include_slots=True if include_slots is None else include_slots, 
+            slot_limit=500 if slot_limit is None else slot_limit, 
+            manage_mode=manage_mode
+        )
+        if not doctor:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+        return {
+            "status": "success",
+            "doctor": doctor
+        }
+
+    doctors_data = service.get_all_active_doctors(
+        include_slots=False if include_slots is None else include_slots, 
+        slot_limit=5 if slot_limit is None else slot_limit,
+        specialization=specialization
+    )
     return {
         "status": "success",
-        "doctor": doctor
+        "count": len(doctors_data),
+        "doctors": doctors_data
     }
 
 

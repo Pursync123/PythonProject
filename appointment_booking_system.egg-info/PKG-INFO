@@ -1,0 +1,324 @@
+Metadata-Version: 2.4
+Name: appointment-booking-system
+Version: 0.1.0
+Summary: A FastAPI-based appointment booking system with doctor and patient management
+Author-email: Anjali <anjali@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/appointment-booking-system
+Project-URL: Documentation, https://github.com/yourusername/appointment-booking-system#readme
+Project-URL: Repository, https://github.com/yourusername/appointment-booking-system.git
+Project-URL: Issues, https://github.com/yourusername/appointment-booking-system/issues
+Keywords: fastapi,appointment,booking,healthcare
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Healthcare Industry
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi==0.125.0
+Requires-Dist: uvicorn==0.38.0
+Requires-Dist: pydantic==2.12.5
+Requires-Dist: pydantic-settings==2.12.0
+Requires-Dist: python-multipart==0.0.21
+Requires-Dist: sqlalchemy==2.0.45
+Requires-Dist: psycopg2-binary==2.9.11
+Requires-Dist: requests==2.32.5
+Requires-Dist: alembic==1.17.2
+Requires-Dist: python-dotenv==1.2.1
+Requires-Dist: apscheduler==3.11.2
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Provides-Extra: test
+Requires-Dist: pytest>=7.4.0; extra == "test"
+Requires-Dist: pytest-asyncio>=0.21.0; extra == "test"
+Requires-Dist: httpx>=0.24.0; extra == "test"
+
+# Appointment Booking System
+
+A production-grade FastAPI application for managing hospital appointments, doctors, and patients with PostgreSQL database.
+
+## Features
+
+- **RESTful API** - Versioned API (v1) with comprehensive endpoints
+- **Database** - PostgreSQL with SQLAlchemy ORM
+- **Modular Architecture** - Clean separation of concerns
+- **Migrations** - Alembic-based database versioning
+- **Exception Handling** - Custom exceptions and error handlers
+- **Audit Logging** - Track all appointment operations
+
+## Directory Structure
+
+```
+.
+├── alembic/                    # Database migrations
+├── app/
+│   ├── api/v1/                 # API v1 endpoints
+│   │   ├── endpoints/          # Individual endpoint files
+│   │   └── api.py              # Router configuration
+│   ├── core/                   # Configuration and settings
+│   ├── db/                     # Database session and connection
+│   ├── models/                 # SQLAlchemy ORM models
+│   ├── repositories/           # Data access layer (repository pattern)
+│   ├── schemas/                # Pydantic schemas (request/response)
+│   ├── services/               # Business logic layer
+│   ├── exceptions/             # Custom exceptions and handlers
+│   └── main.py                 # FastAPI application factory
+├── scripts/                    # Utility scripts
+├── tests/                      # Test suites
+├── main.py                     # Application entry point
+├── requirements.txt            # Python dependencies
+└── .env                        # Environment variables (git ignored)
+```
+
+## Installation
+
+### Prerequisites
+- Python 3.9+
+- PostgreSQL 12+
+- Git
+
+### Setup Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd PythonProject
+   ```
+
+2. **Create and activate virtual environment**
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   source .venv/bin/activate  # Linux/Mac
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database credentials
+   ```
+
+## Database Setup
+
+### Option 1: Docker (Recommended)
+```bash
+docker-compose up -d
+```
+
+### Option 2: Local PostgreSQL
+```sql
+CREATE DATABASE appointment_db;
+CREATE USER appointment_user WITH PASSWORD 'secure_password';
+ALTER ROLE appointment_user SET client_encoding TO 'utf8';
+ALTER ROLE appointment_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE appointment_user SET default_transaction_deferrable TO on;
+ALTER ROLE appointment_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE appointment_db TO appointment_user;
+```
+
+### Initialize Database Schema
+```bash
+python scripts/setup_db.py
+```
+
+Or run Alembic migrations:
+```bash
+alembic upgrade head
+```
+
+## Running the Application
+
+```bash
+python main.py
+```
+
+**Application will be available at:**
+- API: `http://localhost:8000`
+- Swagger Docs: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+- Health Check: `http://localhost:8000/api/v1/health`
+
+## Database Schema
+
+### Core Tables
+
+**doctors**
+- id (String, PK)
+- name, email, phone
+- department, specialization, experience
+- is_active, created_at, updated_at
+
+**patients**
+- id (UUID, PK)
+- first_name, last_name, email, phone
+- dob, insurance_provider, insurance_id
+- is_active, created_at, updated_at
+
+**available_slots**
+- id (UUID, PK)
+- doctor_id (FK → doctors)
+- date, time, duration_minutes
+- status (available/booked)
+- created_at, updated_at
+
+**appointments**
+- id (UUID, PK)
+- patient_id (FK → patients)
+- doctor_id (FK → doctors)
+- slot_id (FK → available_slots)
+- reason, status, requested_datetime
+- created_at, updated_at
+
+**audit_logs**
+- id (UUID, PK)
+- action, appointment_id, timestamp
+- user_id, details, status
+
+### Indexes
+- `idx_doctor_date_time` - available_slots(doctor_id, date, time)
+- `idx_status_date` - available_slots(status, date)
+- `idx_patient_status` - appointments(patient_id, status)
+- `idx_doctor_status` - appointments(doctor_id, status)
+
+## API Endpoints
+
+### Health
+- `GET /api/v1/health` - Health check
+
+### Doctors
+- `GET /api/v1/doctors` - List all doctors
+- `GET /api/v1/doctors/{doctor_id}` - Get doctor details
+
+### Patients
+- `POST /api/v1/patients` - Create new patient
+- `GET /api/v1/patients` - List all patients
+
+### Available Slots
+- `GET /api/v1/available-slots` - List available slots
+- `GET /api/v1/doctors/{doctor_id}/available-slots` - Slots by doctor
+
+### Appointments
+- `POST /api/v1/book-appointment` - Book appointment
+- `GET /api/v1/appointments` - List all appointments
+- `GET /api/v1/appointments/{appointment_id}` - Get appointment details
+- `POST /api/v1/cancel-appointment` - Cancel appointment
+
+## Project Architecture
+
+### Layers
+
+**API Layer** (`app/api/`)
+- Defines routes and endpoint handlers
+- Input validation via Pydantic schemas
+- Response formatting
+
+**Service Layer** (`app/services/`)
+- Business logic and workflows
+- Orchestrates repositories
+- External service integration
+- Error handling
+
+**Repository Layer** (`app/repositories/`)
+- Data access patterns
+- Query optimization
+- Business rule enforcement
+- Transaction management
+
+**Model Layer** (`app/models/`)
+- SQLAlchemy ORM models
+- Relationships and constraints
+- Enum types for statuses
+
+**Schema Layer** (`app/schemas/`)
+- Pydantic models for validation
+- Request/response structures
+- Field validation rules
+
+**Exception Layer** (`app/exceptions/`)
+- Custom exception classes
+- Global exception handlers
+- Error response formatting
+
+## Testing
+
+Run integration tests:
+```bash
+pytest tests/integration/test_api.py -v
+```
+
+Run unit tests:
+```bash
+pytest tests/unit/ -v
+```
+
+## Configuration
+
+Edit `.env` file to configure:
+```
+DATABASE_URL=postgresql://appointment_user:secure_password@localhost:5432/appointment_db
+PROJECT_NAME=Appointment Booking API
+API_V1_STR=/api/v1
+```
+
+## Development
+
+### Run with auto-reload
+```bash
+python main.py
+# or
+uvicorn app.main:app --reload
+```
+
+### Database Migrations
+Create a new migration:
+```bash
+alembic revision --autogenerate -m "description"
+```
+
+Apply migrations:
+```bash
+alembic upgrade head
+```
+
+Rollback:
+```bash
+alembic downgrade -1
+```
+
+## Error Handling
+
+The API provides comprehensive error responses:
+- `400` - Bad Request (validation error)
+- `404` - Not Found (resource not found)
+- `409` - Conflict (slot unavailable, double booking)
+- `500` - Internal Server Error
+
+## Performance
+
+Key optimizations:
+- Composite indexes on frequently queried columns
+- Database-level constraints for data integrity
+- Connection pooling
+- Efficient ORM queries with eager loading
+
+## Support
+
+For issues or questions, please open an issue in the repository.
+
+## License
+
+MIT License - see LICENSE file for details
+
