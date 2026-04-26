@@ -3,8 +3,8 @@ from psycopg2.extras import DictCursor
 import sys
 
 # Hardcoded for migration task
-OLD_DB_URL = "postgresql://ranga:lQHuZjjAtYduMoYuAL6FSHTsBd75u3Qd@dpg-d58jgkogjchc73a744k0-a.virginia-postgres.render.com/ai_receptionist_3gp5?sslmode=require"
-NEW_DB_URL = "postgresql://ranga:04ZD9k3P7DJhl0IWjVofErqi2cuSMFbU@dpg-d6pgod15pdvs73a7r6t0-a.oregon-postgres.render.com/ai_receptionist_ndru?sslmode=require"
+OLD_DB_URL = "postgresql://ranga:04ZD9k3P7DJhl0IWjVofErqi2cuSMFbU@dpg-d6pgod15pdvs73a7r6t0-a.oregon-postgres.render.com/ai_receptionist_ndru?sslmode=require"
+NEW_DB_URL = "postgresql://ranga:cOPVW69EF3RtZPKGI80AWjaZuIJ1Blpo@dpg-d7mudo0k1i2s739bobl0-a.oregon-postgres.render.com/ai_receptionist_ndru_sod8?sslmode=require"
 
 def migrate_doctors():
     print("Starting migration of doctors data...")
