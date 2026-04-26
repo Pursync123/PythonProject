@@ -3,7 +3,7 @@ import uuid
 import logging
 from datetime import datetime
 from .base import BaseRepository
-from app.models.models import Appointment, AppointmentStatus
+from app.models.models import Appointment, AppointmentStatus, AvailableSlot
 
 logger = logging.getLogger(__name__)
 
