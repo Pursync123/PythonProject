@@ -17,6 +17,16 @@ A **FastAPI-based REST API** for an AI-powered medical appointment booking syste
 | AI Integration | Retell AI |
 | Hosting | Render |
 
+### Database Connection Details
+
+| Property | Value |
+|----------|-------|
+| Hostname | `dpg-d58jgkogjchc73a744k0-a.virginia-postgres.render.com` |
+| Port | `5432` |
+| Database | `ai_receptionist_3gp5` |
+| Username | `ranga` |
+| External URL | `postgresql://ranga:lQHuZjjAtYduMoYuAL6FSHTsBd75u3Qd@dpg-d58jgkogjchc73a744k0-a.virginia-postgres.render.com/ai_receptionist_3gp5` |
+
 ---
 
 ## 2. Architecture
