@@ -21,6 +21,19 @@ def seed_future_slots():
         
         print(f"Seeding slots from {start_date} to {end_date}...")
         
+        # Bulk query existing slots to avoid N+1 query problem
+        doctor_ids = [doc.id for doc in doctors]
+        existing_slots = db.query(AvailableSlot).filter(
+            AvailableSlot.doctor_id.in_(doctor_ids),
+            AvailableSlot.date >= start_date,
+            AvailableSlot.date <= end_date
+        ).all()
+        
+        existing_set = {
+            (slot.doctor_id, slot.date, slot.time)
+            for slot in existing_slots
+        }
+        
         slots_to_add = []
         for doc in doctors:
             current_date = start_date
@@ -34,14 +47,7 @@ def seed_future_slots():
                 while curr_time < end_datetime:
                     slot_time = curr_time.time()
                     
-                    # Check if slot already exists
-                    exists = db.query(AvailableSlot).filter(
-                        AvailableSlot.doctor_id == doc.id,
-                        AvailableSlot.date == current_date,
-                        AvailableSlot.time == slot_time
-                    ).first()
-                    
-                    if not exists:
+                    if (doc.id, current_date, slot_time) not in existing_set:
                         slot = AvailableSlot(
                             doctor_id=doc.id,
                             date=current_date,
@@ -58,7 +64,6 @@ def seed_future_slots():
                 current_date += timedelta(days=1)
             print(f"Finished processing {doc.name}")
 
-        
         db.commit()
         print(f"Successfully added {len(slots_to_add)} new slots across {len(doctors)} doctors.")
     
