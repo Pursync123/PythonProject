@@ -37,6 +37,7 @@ dependencies = [
     "python-dotenv==1.2.1",
     "apscheduler==3.11.2",
     "pytz==2024.2",
+    "twilio==9.2.0",
 ]
 
 [project.optional-dependencies]

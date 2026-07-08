@@ -89,6 +89,23 @@ class AppointmentService:
             status="booked"
         )
         
+        # 5. Send SMS Confirmation (non-blocking for the booking transaction)
+        try:
+            doctor = self.doctor_repo.get_by_id(appointment.doctor_id)
+            doctor_name = doctor.name if doctor else "Doctor"
+            
+            from app.services.sms_service import sms_service
+            patient_name = f"{patient.first_name} {patient.last_name}"
+            
+            sms_service.send_appointment_confirmation(
+                patient_name=patient_name,
+                patient_phone=patient.phone,
+                doctor_name=doctor_name,
+                requested_datetime=appointment.requested_datetime
+            )
+        except Exception as e:
+            print(f"Failed to send confirmation SMS: {e}")
+        
         return {
             "id": str(appointment.id),
             "doctor_id": appointment.doctor_id,
@@ -98,6 +115,7 @@ class AppointmentService:
             },
             "requested_datetime": str(appointment.requested_datetime)
         }
+
 
     def cancel_appointment(self, appointment_id: str):
         try:
