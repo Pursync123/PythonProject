@@ -20,24 +20,19 @@ class SmsService:
                 logger.error(f"Failed to initialize Twilio client: {e}")
 
     def format_phone_number(self, phone: str) -> str:
-        """Format phone number to E.164 format if possible"""
+        """Format phone number to E.164 format, forcing +91 for Indian users"""
         if not phone:
             return ""
-        # Remove whitespace and common delimiters
-        cleaned = "".join(c for c in phone if c.isdigit() or c == '+')
-        if cleaned.startswith('+'):
-            return cleaned
+        # Keep only digits
+        digits = "".join(c for c in phone if c.isdigit())
         
-        # Default fallback to prepending +91 for 10/12-digit Indian numbers
-        if len(cleaned) == 10:
-            return f"+91{cleaned}"
-        elif len(cleaned) == 12 and cleaned.startswith("91"):
-            return f"+{cleaned}"
-        elif len(cleaned) == 11 and cleaned.startswith("1"):
-            return f"+{cleaned}"
+        # Indian mobile numbers are 10 digits.
+        # If the number has at least 10 digits, extract the last 10 digits and prepend +91.
+        if len(digits) >= 10:
+            return f"+91{digits[-10:]}"
         
-        # Generic fallback
-        return f"+{cleaned}"
+        # Fallback for short numbers
+        return f"+91{digits}"
 
     def send_sms(self, to_number: str, body: str) -> Optional[str]:
         """Send a basic SMS via Twilio"""
