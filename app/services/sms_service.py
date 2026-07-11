@@ -58,6 +58,39 @@ class SmsService:
             logger.error(f"Error sending Twilio SMS to {formatted_to}: {e}", exc_info=True)
             return None
 
+    def send_whatsapp_message(
+        self,
+        to_number: str,
+        content_sid: str,
+        content_variables: str
+    ) -> Optional[str]:
+        """Send a WhatsApp message via Twilio using templates"""
+        if not self.client:
+            logger.warning("Twilio client is not initialized. Check TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.")
+            return None
+
+        formatted_to = self.format_phone_number(to_number)
+        if not formatted_to.startswith("whatsapp:"):
+            whatsapp_to = f"whatsapp:{formatted_to}"
+        else:
+            whatsapp_to = formatted_to
+
+        whatsapp_from = getattr(settings, "TWILIO_WHATSAPP_FROM_NUMBER", "whatsapp:+14155238886") or "whatsapp:+14155238886"
+
+        try:
+            logger.info(f"Sending WhatsApp via template {content_sid} to {whatsapp_to} from {whatsapp_from}")
+            message = self.client.messages.create(
+                from_=whatsapp_from,
+                content_sid=content_sid,
+                content_variables=content_variables,
+                to=whatsapp_to
+            )
+            logger.info(f"WhatsApp successfully sent: SID={message.sid}")
+            return message.sid
+        except Exception as e:
+            logger.error(f"Error sending Twilio WhatsApp to {whatsapp_to}: {e}", exc_info=True)
+            return None
+
     def send_appointment_confirmation(
         self, 
         patient_name: str, 
@@ -65,10 +98,20 @@ class SmsService:
         doctor_name: str, 
         requested_datetime: datetime
     ) -> Optional[str]:
-        """Send appointment confirmation SMS to patient"""
+        """Send appointment confirmation SMS and WhatsApp to patient"""
         if not patient_phone:
-            logger.warning("No phone number provided for patient. Skipping SMS.")
+            logger.warning("No phone number provided for patient. Skipping messages.")
             return None
+
+        # Convert string to datetime if necessary to prevent errors
+        if isinstance(requested_datetime, str):
+            try:
+                requested_datetime = datetime.fromisoformat(requested_datetime.replace("Z", "+00:00"))
+            except Exception:
+                try:
+                    requested_datetime = datetime.strptime(requested_datetime, "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    logger.error(f"Failed to parse requested_datetime string: {requested_datetime}")
 
         # Format datetime nicely
         try:
@@ -82,6 +125,33 @@ class SmsService:
             f"has been successfully booked for {formatted_time}. "
             f"Thank you!"
         )
-        return self.send_sms(patient_phone, body)
+        sms_sid = self.send_sms(patient_phone, body)
+
+        # Send WhatsApp confirmation
+        try:
+            date_str = f"{requested_datetime.day}/{requested_datetime.month}"
+            
+            # Format time nicely: "3pm" or "3:30pm"
+            time_str = requested_datetime.strftime("%I:%M %p").lower().strip().replace(" ", "")
+            if time_str.startswith("0"):
+                time_str = time_str[1:]
+            if time_str.endswith(":00am"):
+                time_str = time_str.replace(":00am", "am")
+            elif time_str.endswith(":00pm"):
+                time_str = time_str.replace(":00pm", "pm")
+                
+            import json
+            content_vars = json.dumps({"1": date_str, "2": time_str})
+            content_sid = getattr(settings, "TWILIO_WHATSAPP_CONTENT_SID", "HXb5b62575e6e4ff6129ad7c8efe1f983e") or "HXb5b62575e6e4ff6129ad7c8efe1f983e"
+            
+            self.send_whatsapp_message(
+                to_number=patient_phone,
+                content_sid=content_sid,
+                content_variables=content_vars
+            )
+        except Exception as whatsapp_err:
+            logger.error(f"Failed to send WhatsApp confirmation: {whatsapp_err}", exc_info=True)
+
+        return sms_sid
 
 sms_service = SmsService()

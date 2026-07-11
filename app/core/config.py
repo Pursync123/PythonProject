@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     TWILIO_ACCOUNT_SID: Optional[str] = None
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_FROM_NUMBER: Optional[str] = None
+    TWILIO_WHATSAPP_FROM_NUMBER: Optional[str] = None
+    TWILIO_WHATSAPP_CONTENT_SID: Optional[str] = None
 
     
     model_config = SettingsConfigDict(
