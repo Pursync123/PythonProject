@@ -175,4 +175,52 @@ class SmsService:
 
         return sms_sid
 
+    def send_appointment_cancellation(
+        self, 
+        patient_name: str, 
+        patient_phone: str, 
+        doctor_name: str, 
+        requested_datetime: datetime
+    ) -> Optional[str]:
+        """Send appointment cancellation SMS and WhatsApp to patient"""
+        if not patient_phone:
+            logger.warning("No phone number provided for patient. Skipping messages.")
+            return None
+
+        # Convert string to datetime if necessary to prevent errors
+        if isinstance(requested_datetime, str):
+            try:
+                requested_datetime = datetime.fromisoformat(requested_datetime.replace("Z", "+00:00"))
+            except Exception:
+                try:
+                    requested_datetime = datetime.strptime(requested_datetime, "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    logger.error(f"Failed to parse requested_datetime string: {requested_datetime}")
+
+        # Format datetime nicely
+        try:
+            # e.g., "Wednesday, July 08, 2026 at 09:00 AM"
+            formatted_time = requested_datetime.strftime("%A, %B %d, %Y at %I:%M %p")
+        except Exception:
+            formatted_time = str(requested_datetime)
+
+        body = (
+            f"Hello {patient_name}, your appointment with Dr. {doctor_name} "
+            f"on {formatted_time} has been cancelled. "
+            f"Thank you!"
+        )
+        sms_sid = self.send_sms(patient_phone, body)
+
+        # Send WhatsApp cancellation
+        try:
+            logger.info("Attempting to send custom freeform WhatsApp cancellation message...")
+            self.send_whatsapp_message(
+                to_number=patient_phone,
+                body=body
+            )
+        except Exception as whatsapp_err:
+            logger.error(f"Failed to send WhatsApp cancellation: {whatsapp_err}", exc_info=True)
+
+        return sms_sid
+
 sms_service = SmsService()

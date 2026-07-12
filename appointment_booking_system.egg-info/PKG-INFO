@@ -30,6 +30,8 @@ Requires-Dist: requests==2.32.5
 Requires-Dist: alembic==1.17.2
 Requires-Dist: python-dotenv==1.2.1
 Requires-Dist: apscheduler==3.11.2
+Requires-Dist: pytz==2024.2
+Requires-Dist: twilio==9.2.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.4.0; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"

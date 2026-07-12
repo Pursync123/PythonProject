@@ -9,6 +9,8 @@ requests==2.32.5
 alembic==1.17.2
 python-dotenv==1.2.1
 apscheduler==3.11.2
+pytz==2024.2
+twilio==9.2.0
 
 [dev]
 pytest>=7.4.0
