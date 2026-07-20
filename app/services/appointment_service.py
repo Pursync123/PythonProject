@@ -117,7 +117,7 @@ class AppointmentService:
         }
 
 
-    def cancel_appointment(self, appointment_id: str, new_slot_status: str = "available"):
+    def cancel_appointment(self, appointment_id: str, new_slot_status: str = "cancelled"):
         try:
             appt_uuid = uuid.UUID(appointment_id)
         except ValueError:

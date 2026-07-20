@@ -49,7 +49,7 @@ def test_cancel_appointment_sends_sms():
         # Verify
         assert result == {"status": "cancelled", "appointment_id": appointment_id}
         service.appointment_repo.cancel.assert_called_once_with(appt_uuid)
-        service.slot_repo.update_status.assert_called_once_with(appt.slot_id, "available")
+        service.slot_repo.update_status.assert_called_once_with(appt.slot_id, "cancelled")
         service.patient_repo.get_by_id.assert_called_once_with(appt.patient_id)
         service.doctor_repo.get_by_id.assert_called_once_with(appt.doctor_id)
         
