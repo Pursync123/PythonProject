@@ -117,7 +117,7 @@ class AppointmentService:
         }
 
 
-    def cancel_appointment(self, appointment_id: str):
+    def cancel_appointment(self, appointment_id: str, new_slot_status: str = "available"):
         try:
             appt_uuid = uuid.UUID(appointment_id)
         except ValueError:
@@ -133,7 +133,7 @@ class AppointmentService:
         self.appointment_repo.cancel(appt_uuid)
         
         if appt.slot_id:
-            self.slot_repo.update_status(appt.slot_id, "available")
+            self.slot_repo.update_status(appt.slot_id, new_slot_status)
             
         # Send SMS Cancellation (non-blocking/safely handled)
         try:

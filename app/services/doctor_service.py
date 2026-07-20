@@ -208,4 +208,19 @@ class DoctorService:
 
     def update_slot_status(self, slot_id: str, status: str):
         """Update slot status"""
-        return self.slot_repo.update_status(uuid.UUID(slot_id), status)
+        slot_uuid = uuid.UUID(slot_id)
+        
+        # If disabling, check if there is an active appointment to cancel
+        if status == "disabled":
+            from app.models.models import AvailableSlot
+            slot = self.db.query(AvailableSlot).filter(AvailableSlot.id == slot_uuid).first()
+            if slot and slot.appointment:
+                appt = slot.appointment
+                if appt.status == "booked":
+                    from app.services.appointment_service import AppointmentService
+                    appt_service = AppointmentService(self.db)
+                    appt_service.cancel_appointment(str(appt.id), new_slot_status="disabled")
+                    self.db.refresh(slot)
+                    return slot
+
+        return self.slot_repo.update_status(slot_uuid, status)

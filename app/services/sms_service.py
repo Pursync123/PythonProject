@@ -132,7 +132,7 @@ class SmsService:
             formatted_time = str(requested_datetime)
 
         body = (
-            f"Hello {patient_name}, your appointment with Dr. {doctor_name} "
+            f"Hello {patient_name}, your appointment with {doctor_name} "
             f"has been successfully booked for {formatted_time}. "
             f"Thank you!"
         )
