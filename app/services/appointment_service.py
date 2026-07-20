@@ -89,6 +89,23 @@ class AppointmentService:
             status="booked"
         )
         
+        # 5. Send SMS Confirmation (non-blocking for the booking transaction)
+        try:
+            doctor = self.doctor_repo.get_by_id(appointment.doctor_id)
+            doctor_name = doctor.name if doctor else "Doctor"
+            
+            from app.services.sms_service import sms_service
+            patient_name = f"{patient.first_name} {patient.last_name}"
+            
+            sms_service.send_appointment_confirmation(
+                patient_name=patient_name,
+                patient_phone=patient.phone,
+                doctor_name=doctor_name,
+                requested_datetime=appointment.requested_datetime
+            )
+        except Exception as e:
+            print(f"Failed to send confirmation SMS: {e}")
+        
         return {
             "id": str(appointment.id),
             "doctor_id": appointment.doctor_id,
@@ -99,7 +116,8 @@ class AppointmentService:
             "requested_datetime": str(appointment.requested_datetime)
         }
 
-    def cancel_appointment(self, appointment_id: str):
+
+    def cancel_appointment(self, appointment_id: str, new_slot_status: str = "cancelled"):
         try:
             appt_uuid = uuid.UUID(appointment_id)
         except ValueError:
@@ -115,7 +133,25 @@ class AppointmentService:
         self.appointment_repo.cancel(appt_uuid)
         
         if appt.slot_id:
-            self.slot_repo.update_status(appt.slot_id, "available")
+            self.slot_repo.update_status(appt.slot_id, new_slot_status)
+            
+        # Send SMS Cancellation (non-blocking/safely handled)
+        try:
+            patient = self.patient_repo.get_by_id(appt.patient_id)
+            doctor = self.doctor_repo.get_by_id(appt.doctor_id)
+            if patient:
+                doctor_name = doctor.name if doctor else "Doctor"
+                patient_name = f"{patient.first_name} {patient.last_name}"
+                
+                from app.services.sms_service import sms_service
+                sms_service.send_appointment_cancellation(
+                    patient_name=patient_name,
+                    patient_phone=patient.phone,
+                    doctor_name=doctor_name,
+                    requested_datetime=appt.requested_datetime
+                )
+        except Exception as e:
+            print(f"Failed to send cancellation SMS: {e}")
             
         return {"status": "cancelled", "appointment_id": appointment_id}
         
