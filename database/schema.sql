@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS available_slots (
 
     FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
     CONSTRAINT valid_duration CHECK (duration_minutes > 0 AND duration_minutes <= 480),
-    CONSTRAINT valid_time CHECK (time >= '08:00'::TIME AND time <= '18:00'::TIME),
+    CONSTRAINT valid_time CHECK (time >= '07:00'::TIME AND time <= '22:00'::TIME),
     CONSTRAINT unique_slot UNIQUE (doctor_id, date, time)
 );
 

@@ -33,95 +33,31 @@ DEPARTMENTS = [
     {"id": "general",        "name": "General Medicine", "description": "Primary care and general health"},
     {"id": "ent",            "name": "ENT",            "description": "Ear, nose, and throat specialists"},
     {"id": "ophthalmology",  "name": "Ophthalmology",  "description": "Eye care and vision specialists"},
+    {"id": "gynecology",     "name": "Gynecology & Obstetrics", "description": "Maternity, pregnancy, and female reproductive health specialists"},
+    {"id": "surgery",        "name": "General Surgery", "description": "General and laparoscopic surgery specialists"},
 ]
 
 DOCTORS = [
     {
-        "id": "DOC001",
-        "name": "Dr. Sarah Johnson",
-        "email": "sarah.johnson@hospital.com",
-        "department": "cardiology",
-        "specialization": "Interventional Cardiology",
-        "experience": 15,
-        "phone": "+1-555-0101",
-        "bio": "Board-certified cardiologist with 15 years of experience in interventional cardiology and cardiac catheterization.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC002",
-        "name": "Dr. Michael Chen",
-        "email": "michael.chen@hospital.com",
-        "department": "neurology",
-        "specialization": "Neurophysiology",
-        "experience": 12,
-        "phone": "+1-555-0102",
-        "bio": "Specialist in neurophysiology and movement disorders with extensive research in Parkinson's disease.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC003",
-        "name": "Dr. Emily Williams",
-        "email": "emily.williams@hospital.com",
-        "department": "pediatrics",
-        "specialization": "Pediatric Oncology",
+        "id": "doc001",
+        "name": "Dr. K. Vineela",
+        "email": "k.vineela@hospital.com",
+        "department": "gynecology",
+        "specialization": "Obstetrician & Gynecologist, Infertility Specialist & Laparoscopic Surgeon",
         "experience": 10,
-        "phone": "+1-555-0103",
-        "bio": "Dedicated pediatric oncologist focused on childhood leukemia and innovative treatment approaches.",
+        "phone": "+91-95500-32011",
+        "bio": "MBBS, DGO, DNB (Gold Medalist). Obstetrician & Gynecologist, Infertility Specialist & Laparoscopic Surgeon. Timings: 10:30AM - 2PM & 6PM - 8:30PM (Sunday: 10AM to 1PM).",
         "is_active": True,
     },
     {
-        "id": "DOC004",
-        "name": "Dr. Raj Patel",
-        "email": "raj.patel@hospital.com",
-        "department": "orthopedics",
-        "specialization": "Sports Medicine & Joint Replacement",
-        "experience": 18,
-        "phone": "+1-555-0104",
-        "bio": "Renowned orthopedic surgeon specializing in minimally invasive joint replacement and sports injuries.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC005",
-        "name": "Dr. Lisa Anderson",
-        "email": "lisa.anderson@hospital.com",
-        "department": "dermatology",
-        "specialization": "Cosmetic Dermatology",
-        "experience": 8,
-        "phone": "+1-555-0105",
-        "bio": "Expert in cosmetic dermatology, laser treatments, and skin cancer screening.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC006",
-        "name": "Dr. James Wilson",
-        "email": "james.wilson@hospital.com",
-        "department": "general",
-        "specialization": "Internal Medicine",
-        "experience": 20,
-        "phone": "+1-555-0106",
-        "bio": "Seasoned internist with two decades of experience in preventive medicine and chronic disease management.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC007",
-        "name": "Dr. Priya Sharma",
-        "email": "priya.sharma@hospital.com",
-        "department": "ent",
-        "specialization": "Otolaryngology",
-        "experience": 11,
-        "phone": "+1-555-0107",
-        "bio": "ENT specialist experienced in sinus surgery, hearing disorders, and pediatric ENT conditions.",
-        "is_active": True,
-    },
-    {
-        "id": "DOC008",
-        "name": "Dr. David Kim",
-        "email": "david.kim@hospital.com",
-        "department": "ophthalmology",
-        "specialization": "Retinal Surgery",
-        "experience": 14,
-        "phone": "+1-555-0108",
-        "bio": "Expert ophthalmologist specializing in retinal surgery, LASIK, and diabetic eye disease.",
+        "id": "doc002",
+        "name": "Dr. V. Ram Prasad",
+        "email": "v.ramprasad@hospital.com",
+        "department": "surgery",
+        "specialization": "General & Laparoscopic Surgeon",
+        "experience": 12,
+        "phone": "+91-95500-32011",
+        "bio": "MBBS, MS. General & Laparoscopic Surgeon. Timings: 7PM - 9PM (Sunday: 10AM to 1PM).",
         "is_active": True,
     },
 ]
@@ -169,43 +105,32 @@ def seed_departments(db):
 
 
 def seed_doctors(db):
-    """Insert or update doctors."""
+    """Insert or update doctors after clearing the existing ones."""
+    print("Clearing existing doctors...")
+    db.query(Doctor).delete()
+    db.commit()
+
     print("Seeding doctors...")
     created = 0
-    updated = 0
-
     for doc_data in DOCTORS:
-        existing = db.query(Doctor).filter(Doctor.id == doc_data["id"]).first()
-        if existing:
-            existing.name = doc_data["name"]
-            existing.email = doc_data["email"]
-            existing.department = doc_data["department"]
-            existing.specialization = doc_data["specialization"]
-            existing.experience = doc_data["experience"]
-            existing.phone = doc_data["phone"]
-            existing.bio = doc_data["bio"]
-            existing.is_active = doc_data["is_active"]
-            existing.updated_at = datetime.utcnow()
-            updated += 1
-        else:
-            doctor = Doctor(
-                id=doc_data["id"],
-                name=doc_data["name"],
-                email=doc_data["email"],
-                department=doc_data["department"],
-                specialization=doc_data["specialization"],
-                experience=doc_data["experience"],
-                phone=doc_data["phone"],
-                bio=doc_data["bio"],
-                is_active=doc_data["is_active"],
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
-            db.add(doctor)
-            created += 1
+        doctor = Doctor(
+            id=doc_data["id"],
+            name=doc_data["name"],
+            email=doc_data["email"],
+            department=doc_data["department"],
+            specialization=doc_data["specialization"],
+            experience=doc_data["experience"],
+            phone=doc_data["phone"],
+            bio=doc_data["bio"],
+            is_active=doc_data["is_active"],
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(doctor)
+        created += 1
 
     db.commit()
-    print(f"[OK] Doctors - {created} created, {updated} updated.\n")
+    print(f"[OK] Doctors - {created} created.\n")
 
 
 def verify_data(db):

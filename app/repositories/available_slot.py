@@ -35,13 +35,18 @@ class AvailableSlotRepository(BaseRepository):
         ).first()
 
     def update_status(self, slot_id: uuid.UUID, status: str) -> Optional[AvailableSlot]:
-        """Update slot status"""
+        """Update slot status, delete slot if status is 'cancelled'"""
         slot = self.db.query(AvailableSlot).filter(AvailableSlot.id == slot_id).first()
         if slot:
-            slot.status = status
-            slot.updated_at = datetime.utcnow()
-            self.db.commit()
-            self.db.refresh(slot)
+            if status == SlotStatus.CANCELLED.value:
+                self.db.delete(slot)
+                self.db.commit()
+                return None
+            else:
+                slot.status = status
+                slot.updated_at = datetime.utcnow()
+                self.db.commit()
+                self.db.refresh(slot)
         return slot
         
     def get_available_slots_by_department(self, department: str) -> List[AvailableSlot]:
@@ -87,10 +92,10 @@ class AvailableSlotRepository(BaseRepository):
 
     def cancel_slots_in_range(self, doctor_id: str, target_date: date,
                               start_time=None, end_time=None) -> int:
-        """Disable all available slots for a doctor on a date, optionally within a time window.
+        """Delete all available slots for a doctor on a date, optionally within a time window.
         
         Returns:
-            Number of slots cancelled.
+            Number of slots deleted.
         """
         from datetime import time as dt_time
         query = self.db.query(AvailableSlot).filter(
@@ -105,7 +110,6 @@ class AvailableSlotRepository(BaseRepository):
 
         slots = query.all()
         for slot in slots:
-            slot.status = SlotStatus.CANCELLED.value
-            slot.updated_at = datetime.utcnow()
+            self.db.delete(slot)
         self.db.commit()
         return len(slots)
