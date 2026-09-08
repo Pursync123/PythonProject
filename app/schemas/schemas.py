@@ -130,11 +130,21 @@ class DoctorResponse(BaseModel):
 
 
 
+class DoctorInfo(BaseModel):
+    id: str
+    name: str
+    department: Optional[str] = None
+    specialization: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Appointment(BaseModel):
     id: str | uuid.UUID = Field(default_factory=lambda: str(uuid.uuid4()))
 
     patient: Patient
-    doctor_id: Optional[str] = None # Linking to a doctor if needed, though currently logic binds by time
+    doctor_id: Optional[str] = None # Linking to a doctor if needed
+    doctor: Optional[DoctorInfo] = None
     reason: str
     requested_datetime: datetime | str
     created_at: datetime | str = Field(default_factory=lambda: datetime.now().isoformat() + "Z")

@@ -7,6 +7,8 @@ from app.models.models import Appointment, AppointmentStatus, AvailableSlot
 
 logger = logging.getLogger(__name__)
 
+from sqlalchemy.orm import joinedload
+
 class AppointmentRepository(BaseRepository):
     """Repository for Appointment operations"""
 
@@ -42,11 +44,17 @@ class AppointmentRepository(BaseRepository):
 
     def get_by_id(self, appointment_id: uuid.UUID) -> Optional[Appointment]:
         """Get appointment by ID"""
-        return self.db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        return self.db.query(Appointment).options(
+            joinedload(Appointment.patient),
+            joinedload(Appointment.doctor)
+        ).filter(Appointment.id == appointment_id).first()
 
     def get_booked_appointments(self) -> List[Appointment]:
         """Get all booked appointments"""
-        return self.db.query(Appointment).filter(
+        return self.db.query(Appointment).options(
+            joinedload(Appointment.patient),
+            joinedload(Appointment.doctor)
+        ).filter(
             Appointment.status == AppointmentStatus.BOOKED.value
         ).order_by(Appointment.requested_datetime).all()
 
